@@ -5,12 +5,15 @@ import type { NextRequest } from "next/server";
 export const SESSION_COOKIE = "fielddrop_google_session";
 export const STATE_COOKIE = "fielddrop_google_oauth_state";
 
-export function createGoogleOAuthClient() {
+export function getGoogleRedirectUri(request: NextRequest) {
+  return new URL("/api/auth/callback", request.nextUrl.origin).toString();
+}
+
+export function createGoogleOAuthClient(redirectUri?: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
 
-  if (!clientId || !clientSecret || !redirectUri) {
+  if (!clientId || !clientSecret) {
     throw new Error("Google OAuth is not configured.");
   }
 

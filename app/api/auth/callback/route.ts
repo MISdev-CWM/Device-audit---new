@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   createGoogleOAuthClient,
   encryptRefreshToken,
+  getGoogleRedirectUri,
   SESSION_COOKIE,
   sessionCookieOptions,
   STATE_COOKIE,
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { tokens } = await createGoogleOAuthClient().getToken(code);
+    const { tokens } = await createGoogleOAuthClient(getGoogleRedirectUri(request)).getToken(code);
     if (!tokens.refresh_token) return redirectWithStatus(request, "error");
 
     const response = redirectWithStatus(request, "connected");

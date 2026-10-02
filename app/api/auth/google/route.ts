@@ -1,13 +1,13 @@
 import { randomBytes } from "node:crypto";
-import { NextResponse } from "next/server";
-import { createGoogleOAuthClient, STATE_COOKIE, stateCookieOptions } from "../../../lib/google-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { createGoogleOAuthClient, getGoogleRedirectUri, STATE_COOKIE, stateCookieOptions } from "../../../lib/google-auth";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const state = randomBytes(32).toString("hex");
-    const authUrl = createGoogleOAuthClient().generateAuthUrl({
+    const authUrl = createGoogleOAuthClient(getGoogleRedirectUri(request)).generateAuthUrl({
       access_type: "offline",
       include_granted_scopes: true,
       prompt: "consent",
