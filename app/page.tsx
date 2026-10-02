@@ -49,24 +49,10 @@ export default function Home() {
   const [destinationFolder, setDestinationFolder] = useState<DriveFolder | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [driveConnected, setDriveConnected] = useState(false);
 
   useEffect(() => {
-    let active = true;
     const previewUrls = previews.current;
-    fetch("/api/auth/status", { cache: "no-store" })
-      .then((response) => response.json())
-      .then(({ connected }: { connected: boolean }) => {
-        if (active) setDriveConnected(connected);
-      })
-      .catch(() => {});
-
-    const driveStatus = new URLSearchParams(window.location.search).get("drive");
-    if (driveStatus === "connected") setNotice("Google Drive connected. You can send images.");
-    if (driveStatus === "error") setNotice("Google sign-in failed. Check the OAuth setup and try again.");
-
     return () => {
-      active = false;
       previewUrls.forEach(URL.revokeObjectURL);
     };
   }, []);
@@ -177,10 +163,9 @@ export default function Home() {
           <span className="brand-mark"><ImagePlus size={17} strokeWidth={2.2} /></span>
           <span>fielddrop</span>
         </a>
-        <a className="topbar-note drive-connect" href="/api/auth/google" title="Connect or switch Google accounts">
-          <span className={`live-dot${driveConnected ? "" : " is-disconnected"}`} />
-          {driveConnected ? "GOOGLE DRIVE CONNECTED" : "CONNECT GOOGLE DRIVE"}
-        </a>
+        <span className="topbar-note">
+          <span className="live-dot" /> GOOGLE DRIVE INBOX
+        </span>
       </header>
 
       <div className="page-wrap" id="top">
@@ -191,13 +176,13 @@ export default function Home() {
             <p className="eyebrow">A CLEAR PATH TO THE CLOUD</p>
             <h1>Send your images<br /><span>where they belong.</span></h1>
           </div>
-          <p className="intro-copy">Connect your Google account once, then send images to your Drive folder.</p>
+          <p className="intro-copy">Send images directly to the secure Drive inbox. No Google sign-in is required.</p>
         </section>
 
         <div className="workspace-grid">
           <section className="upload-panel" aria-labelledby="upload-heading">
             <div className="section-heading">
-              <div><span className="step-number">01</span><h2 id="upload-heading">{driveConnected ? "Select images" : "Connect Google Drive"}</h2></div>
+              <div><span className="step-number">01</span><h2 id="upload-heading">Select images</h2></div>
               <span className="selection-count">{images.length} / {MAX_FILES}</span>
             </div>
 
@@ -207,7 +192,6 @@ export default function Home() {
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
               multiple
-              disabled={!driveConnected}
               aria-hidden="true"
               onChange={(event) => { if (event.target.files) addFiles(event.target.files); }}
               tabIndex={-1}
@@ -215,16 +199,15 @@ export default function Home() {
             <button
               className={`dropzone${isDragging ? " is-dragging" : ""}`}
               type="button"
-              disabled={!driveConnected}
               onClick={() => inputRef.current?.click()}
               onDragOver={(event) => { event.preventDefault(); setIsDragging(true); }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={(event) => { event.preventDefault(); setIsDragging(false); addFiles(event.dataTransfer.files); }}
-              aria-label={driveConnected ? "Browse or drop image files" : "Connect Google Drive before selecting images"}
+              aria-label="Browse or drop image files"
             >
               <span className="drop-icon"><CloudUpload size={24} strokeWidth={1.7} /></span>
-              <span className="drop-title">{driveConnected ? <>Drop images here, or <span>browse files</span></> : "Connect Google Drive to choose images"}</span>
-              <span className="drop-hint">{driveConnected ? <>JPG, PNG, WEBP, GIF or AVIF <i /> Up to 15 MB each</> : "Your files will be ready after you connect"}</span>
+              <span className="drop-title">Drop images here, or <span>browse files</span></span>
+              <span className="drop-hint">JPG, PNG, WEBP, GIF or AVIF <i /> Up to 15 MB each</span>
             </button>
 
             <div className="folder-name-field">
@@ -235,7 +218,7 @@ export default function Home() {
                 value={folderName}
                 maxLength={255}
                 required
-                disabled={!driveConnected || isUploading || Boolean(retryFolderId)}
+                disabled={isUploading || Boolean(retryFolderId)}
                 placeholder="e.g. WhatsApp images - 2026-10-02"
                 onChange={(event) => setFolderName(event.target.value)}
               />
@@ -285,16 +268,10 @@ export default function Home() {
 
             <div className="upload-actions">
               <span className="privacy-note"><ShieldCheck size={15} /> Files are sent securely</span>
-              {driveConnected ? (
-                <button className="submit-button" type="button" onClick={uploadImages} disabled={images.length === 0 || isUploading || (!retryFolderId && !folderName.trim())}>
-                  {isUploading ? <LoaderCircle className="spin" size={17} /> : <ArrowUpFromLine size={17} />}
-                  {isUploading ? "Sending images" : "Send to Drive"}
-                </button>
-              ) : (
-                <a className="submit-button" href="/api/auth/google">
-                  <CloudUpload size={17} /> Connect Google Drive
-                </a>
-              )}
+              <button className="submit-button" type="button" onClick={uploadImages} disabled={images.length === 0 || isUploading || (!retryFolderId && !folderName.trim())}>
+                {isUploading ? <LoaderCircle className="spin" size={17} /> : <ArrowUpFromLine size={17} />}
+                {isUploading ? "Sending images" : "Send to Drive"}
+              </button>
             </div>
           </section>
 
@@ -307,7 +284,7 @@ export default function Home() {
             <div className="destination-details">
               <p className="eyebrow">YOUR DESTINATION</p>
               <h2 id="destination-heading">Your Google Drive folder</h2>
-              <div className="destination-status"><span className="status-dot" /> {driveConnected ? "Personal Google Drive connected" : "Connect Google Drive to upload"}</div>
+              <div className="destination-status"><span className="status-dot" /> Ready to receive uploads</div>
               <div className="destination-rule" />
               <div className="destination-foot"><span>IMAGES ONLY</span><span>MAX 15 MB</span></div>
             </div>

@@ -17,6 +17,24 @@ export function createGoogleOAuthClient() {
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 }
 
+/**
+ * Authenticates the server as the Drive owner. The refresh token stays in the
+ * server environment, so people submitting images never see Google sign-in.
+ */
+export function createGoogleDriveServerAuth() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error("Server Google Drive credentials are not configured.");
+  }
+
+  const auth = new google.auth.OAuth2(clientId, clientSecret);
+  auth.setCredentials({ refresh_token: refreshToken });
+  return auth;
+}
+
 function encryptionKey() {
   const secret = process.env.AUTH_SECRET;
   if (!secret || secret.length < 32) {

@@ -1,7 +1,7 @@
 import { Readable } from "node:stream";
 import { google } from "googleapis";
 import { NextRequest, NextResponse } from "next/server";
-import { createGoogleOAuthClient, getSessionRefreshToken } from "../../lib/google-auth";
+import { createGoogleDriveServerAuth } from "../../lib/google-auth";
 
 export const runtime = "nodejs";
 
@@ -19,14 +19,7 @@ type UploadFailure = { index: number; name: string; message: string };
 
 export async function POST(request: NextRequest) {
   const folderId = process.env.DRIVE_FOLDER_ID;
-  const refreshToken = getSessionRefreshToken(request);
 
-  if (!refreshToken) {
-    return NextResponse.json(
-      { error: "Connect your personal Google account before uploading." },
-      { status: 401 },
-    );
-  }
   if (!folderId) {
     return NextResponse.json({ error: "Set DRIVE_FOLDER_ID in the server environment." }, { status: 500 });
   }
@@ -57,9 +50,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Folder names must be 255 characters or fewer." }, { status: 400 });
   }
 
-  const auth = createGoogleOAuthClient();
-  auth.setCredentials({ refresh_token: refreshToken });
-  const drive = google.drive({ version: "v3", auth });
+  let drive;
+  try {
+    drive = google.drive({ version: "v3", auth: createGoogleDriveServerAuth() });
+  } catch {
+    return NextResponse.json(
+      { error: "The server Drive inbox is not configured. Contact the administrator." },
+      { status: 500 },
+    );
+  }
   const uploaded: Array<{ index: number; name: string; id: string; url: string }> = [];
   const failed: UploadFailure[] = [];
   const validFiles: Array<{ index: number; file: File }> = [];
