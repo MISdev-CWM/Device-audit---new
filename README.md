@@ -6,8 +6,8 @@ Fielddrop uploads images to a folder in the signed-in user's Google Drive. Googl
 
 1. In Google Cloud Console, create or choose a project and enable the **Google Drive API**.
 2. Configure the OAuth consent screen for an **External** app and add your personal Gmail address as a test user.
-3. Create an OAuth client ID for a **Web application**. Add `http://localhost:3002/api/auth/callback` as an authorized redirect URI. If the app runs on another port, use that exact port instead.
-4. Copy `.env.example` to `.env.local`. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from the OAuth client, `DRIVE_FOLDER_ID` to a folder in your Drive, and `GOOGLE_REDIRECT_URI` to the exact callback URL registered above.
+3. Create an OAuth client ID for a **Web application**. Add `http://localhost:3002/api/auth/callback` and `https://YOUR-VERCEL-DOMAIN/api/auth/callback` as authorized redirect URIs. Replace `YOUR-VERCEL-DOMAIN` with the production domain shown in Vercel project settings. The app derives its callback URL from the host where sign-in starts, so each URL must match exactly.
+4. Copy `.env.example` to `.env.local`. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from the OAuth client and `DRIVE_FOLDER_ID` to a folder in your Drive.
 5. Set `AUTH_SECRET` to a random secret of at least 32 characters. You can generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
 
 The signed-in Gmail account must have edit access to the destination folder. The app stores its refresh token only in an encrypted, HTTP-only cookie. Never commit `.env.local` or share OAuth client secrets. For deployment, set these variables in the hosting provider and register the matching production callback URL.
